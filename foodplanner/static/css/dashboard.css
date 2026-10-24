@@ -183,14 +183,19 @@
 }
 
 * { box-sizing: border-box; }
-html, body { margin: 0; height: 100%; }
-
+html, body { margin: 0; min-height: 100%; }
+html { overflow-x: hidden; }
 body {
+  overflow-x: hidden;
   font-family: var(--font-ui);
   background: var(--bg);
   color: var(--ink);
   -webkit-font-smoothing: antialiased;
   transition: background 0.15s ease, color 0.15s ease;
+}
+body.drawer-open,
+body.modal-open {
+  overflow: hidden;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -652,10 +657,15 @@ body.drawer-open .sidebar { transform: translateX(0); }
   .page-header-actions { display: none; }
 
   .sidebar {
-    position: fixed; z-index: 50; top: 0; left: 0; bottom: 0; width: 280px;
-    transform: translateX(-100%);
+    position: fixed; z-index: 50; top: 0; left: 0; bottom: 0; width: min(82vw, 320px);
+    max-width: 320px; transform: translateX(-105%);
     transition: transform 0.2s ease;
     padding-top: calc(1.4rem + env(safe-area-inset-top, 0px));
+  }
+
+  .main-content {
+    padding-left: clamp(0.9rem, 3vw, 1.4rem);
+    padding-right: clamp(0.9rem, 3vw, 1.4rem);
   }
 }
 
@@ -665,6 +675,20 @@ body.drawer-open .sidebar { transform: translateX(0); }
   .quick-actions-row { grid-template-columns: repeat(2, 1fr); }
   .spend-strip { grid-template-columns: 1fr; gap: 0.4rem; }
   .spend-strip div { display: flex; justify-content: space-between; align-items: center; text-align: left; padding: 0.5rem 0.7rem; }
+  .card {
+    padding-left: 0.9rem;
+    padding-right: 0.9rem;
+  }
+  .meal-card {
+    align-items: flex-start;
+    gap: 0.6rem;
+  }
+  .meal-card .meal-info {
+    min-width: 0;
+  }
+  .meal-info .name {
+    white-space: normal;
+  }
 }
 /* Shared, accessible pagination for data-heavy app pages. */
 .app-pagination {
