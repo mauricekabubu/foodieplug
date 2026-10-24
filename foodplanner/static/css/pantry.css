@@ -220,16 +220,20 @@
   position: fixed; inset: 0; z-index: 80;
   background: rgba(20, 16, 10, 0.45);
   align-items: center; justify-content: center;
-  padding: 1rem;
+  padding: max(0.75rem, env(safe-area-inset-top, 0px)) max(0.75rem, env(safe-area-inset-right, 0px)) max(1rem, env(safe-area-inset-bottom, 0px)) max(0.75rem, env(safe-area-inset-left, 0px));
+  overflow-y: auto;
 }
 .modal-overlay.is-open { display: flex; }
 
 .modal-panel {
   background: var(--surface); border-radius: var(--radius-lg);
   box-shadow: var(--shadow-pop);
-  width: 100%; max-width: 440px;
-  max-height: 90vh; overflow-y: auto;
+  width: min(100%, 440px);
+  max-height: min(90vh, 760px);
+  max-height: min(90dvh, 760px);
+  overflow-y: auto;
   padding: 1.5rem 1.6rem;
+  overscroll-behavior: contain;
 }
 .modal-panel.is-small { max-width: 380px; }
 
@@ -309,6 +313,25 @@
   .item-qty-control { order: 3; margin-left: 60px; }
   .item-actions { order: 4; margin-left: auto; }
   .modal-field-row { grid-template-columns: 1fr; }
+  .modal-panel {
+    width: min(100%, 100%);
+    max-width: none;
+    border-radius: 16px 16px 0 0;
+    margin-top: auto;
+    margin-bottom: 0;
+    max-height: 85dvh;
+  }
+  .modal-overlay {
+    align-items: flex-end;
+    padding: 0;
+  }
+  .modal-actions {
+    flex-direction: column-reverse;
+  }
+  .modal-actions .btn-solid,
+  .modal-actions .btn-outline {
+    width: 100%;
+  }
 }
 
 /* Compact pantry dropdowns */
