@@ -61,6 +61,7 @@
 
   function openDrawer() {
     document.body.classList.add('drawer-open');
+    document.body.setAttribute('data-drawer-open', 'true');
 
     if (drawerOpenBtn) {
       drawerOpenBtn.setAttribute('aria-expanded', 'true');
@@ -69,6 +70,7 @@
 
   function closeDrawer() {
     document.body.classList.remove('drawer-open');
+    document.body.removeAttribute('data-drawer-open');
 
     if (drawerOpenBtn) {
       drawerOpenBtn.setAttribute('aria-expanded', 'false');
@@ -76,7 +78,14 @@
   }
 
   if (drawerOpenBtn) {
-    drawerOpenBtn.addEventListener('click', openDrawer);
+    drawerOpenBtn.addEventListener('click', function () {
+      var isOpen = document.body.classList.contains('drawer-open');
+      if (isOpen) {
+        closeDrawer();
+      } else {
+        openDrawer();
+      }
+    });
   }
 
   if (drawerCloseBtn) {
@@ -86,6 +95,20 @@
   if (drawerScrim) {
     drawerScrim.addEventListener('click', closeDrawer);
   }
+
+  document.addEventListener('keydown', function (e) {
+    if (e.key === 'Escape' && document.body.classList.contains('drawer-open')) {
+      closeDrawer();
+    }
+  });
+
+  document.querySelectorAll('.sidebar a.nav-item').forEach(function (link) {
+    link.addEventListener('click', function () {
+      if (window.innerWidth <= 980) {
+        closeDrawer();
+      }
+    });
+  });
 
 
   /* ---------------- shared modal system ---------------- */
