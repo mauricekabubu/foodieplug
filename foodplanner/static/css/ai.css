@@ -803,7 +803,7 @@ body.modal-open {
   z-index: 1000;
   align-items: center;
   justify-content: center;
-  padding: 1rem;
+  padding: max(0.75rem, env(safe-area-inset-top, 0px)) max(0.75rem, env(safe-area-inset-right, 0px)) max(1rem, env(safe-area-inset-bottom, 0px)) max(0.75rem, env(safe-area-inset-left, 0px));
   background: rgba(20, 20, 18, 0.5);
   overflow-y: auto;
 }
@@ -971,7 +971,9 @@ body.modal-open {
 
   .ai-panel {
     max-width: none;
+    width: 100%;
     border-radius: 16px 16px 0 0;
+    margin: auto 0 0;
   }
 }
 
