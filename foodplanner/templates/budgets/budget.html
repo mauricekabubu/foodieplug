@@ -244,7 +244,7 @@
           </div>
           <div class="bd-field">
             <label for="id_exp_amount">Amount (KES)</label>
-            <input type="number" id="id_exp_amount" name="amount" value="{{ values.amount }}" min="0.01" step="0.01" inputmode="decimal" placeholder="350" required>
+            <input type="number" id="id_exp_amount" name="amount" value="{{ values.amount }}" min="0.01" max="99999999.99" step="0.01" inputmode="decimal" placeholder="350" required>
           </div>
           <div class="bd-field">
             <label for="id_exp_date">Date</label>
@@ -547,7 +547,7 @@
           <h2 id="quick-expense-title">Add expense</h2>
           <button type="button" class="bd-modal-close" data-close-modal aria-label="Close">&#10005;</button>
         </div>
-        <form method="post" action="{% url 'budgets:add_expense' budget.id %}" novalidate>
+        <form method="post" action="{% url 'budgets:add_expense' budget.id %}">
           {% csrf_token %}
           <div class="bd-form-grid">
             <div class="bd-field is-full">
@@ -556,11 +556,11 @@
             </div>
             <div class="bd-field">
               <label for="qe_amount">Amount (KES)</label>
-              <input type="number" id="qe_amount" name="amount" min="0.01" step="0.01" inputmode="decimal" required>
+              <input type="number" id="qe_amount" name="amount" min="0.01" max="99999999.99" step="0.01" inputmode="decimal" required>
             </div>
             <div class="bd-field">
               <label for="qe_date">Date</label>
-              <input type="date" id="qe_date" name="date" data-default-today required>
+              <input type="date" id="qe_date" name="date" value="{{ values.date|default:expense_default_date }}" min="{{ budget.start_date|date:'Y-m-d' }}" max="{{ budget.end_date|date:'Y-m-d' }}" data-default-today required>
             </div>
           </div>
           <div class="bd-form-actions">
