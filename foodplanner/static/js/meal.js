@@ -36,6 +36,26 @@
   var origin = null;      // element to return focus to when everything closes
   var pressOnBackdrop = false;
 
+  function syncModalViewport() {
+    var viewport = window.visualViewport;
+    if (!viewport || window.innerWidth > 640) return;
+    modals.forEach(function (modal) {
+      if (!modal.classList.contains(OPEN)) return;
+      modal.style.setProperty('--mp-viewport-height', viewport.height + 'px');
+      modal.style.setProperty('--mp-viewport-offset-top', viewport.offsetTop + 'px');
+    });
+  }
+
+  function clearModalViewport(modal) {
+    modal.style.removeProperty('--mp-viewport-height');
+    modal.style.removeProperty('--mp-viewport-offset-top');
+  }
+
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener('resize', syncModalViewport);
+    window.visualViewport.addEventListener('scroll', syncModalViewport);
+  }
+
   /* ------------------------------------------------------------------ helpers */
   
   function urlFor(template, id) {
@@ -64,12 +84,14 @@
     modal.classList.add(OPEN);
     modal.setAttribute('aria-hidden', 'false');
     document.body.classList.add(LOCK);
+    syncModalViewport();
     window.requestAnimationFrame(function () { focusFirst(modal); });
   }
 
   function closeModal(modal, restoreFocus) {
     modal.classList.remove(OPEN);
     modal.setAttribute('aria-hidden', 'true');
+    clearModalViewport(modal);
 
     if (!openModals().length) {
       document.body.classList.remove(LOCK);
