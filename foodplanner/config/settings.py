@@ -14,7 +14,7 @@ from pathlib import Path
 import os
 from urllib.parse import parse_qsl, unquote, urlparse
 
-from django.core.exceptions import ImproperlyConfigured
+from django.core.exceptions import ImproperlyConfigured  # pyright: ignore[reportMissingImports]
 from dotenv import load_dotenv
 
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -27,7 +27,7 @@ load_dotenv(BASE_DIR / ".env", override=False)
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
-import cloudinary
+import cloudinary  # pyright: ignore[reportMissingImports]
 
 cloudinary.config(
     cloud_name=os.getenv("CLOUDINARY_NAME"),
