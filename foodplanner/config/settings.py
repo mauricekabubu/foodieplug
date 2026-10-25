@@ -14,7 +14,7 @@ from pathlib import Path
 import os
 from urllib.parse import parse_qsl, unquote, urlparse
 
-from django.core.exceptions import ImproperlyConfigured  # pyright: ignore[reportMissingImports]
+from django.core.exceptions import ImproperlyConfigured  # pyright: ignore[reportMissingModuleSource, reportMissingImports]
 from dotenv import load_dotenv
 
 BASE_DIR = Path(__file__).resolve().parent.parent
