@@ -229,15 +229,74 @@
 /* ---------- responsive ---------- */
 @media (max-width: 860px) {
   .ml-detail { grid-template-columns: minmax(0, 1fr); }
+  .ml-header { align-items: flex-start; }
 }
+
 @media (max-width: 640px) {
-  .ml-header-actions { width: 100%; }
-  .ml-header-actions .ml-btn { flex: 1 1 auto; }
-  .ml-sort { width: 100%; }
+  .ml-page { padding: 0 0 1rem; }
+  .ml-header {
+    margin-bottom: 1rem;
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .ml-header-actions {
+    width: 100%;
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .ml-header-actions .ml-btn { flex: 1 1 auto; width: 100%; }
+  .ml-toolbar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+  .ml-search {
+    max-width: none;
+    width: 100%;
+  }
+  .ml-sort {
+    width: 100%;
+    justify-content: space-between;
+  }
   .ml-sort select { flex: 1; }
   .ml-field-row { grid-template-columns: minmax(0, 1fr); }
   .ml-card-actions .ml-btn { flex: 1 1 auto; }
+  .ml-grid { grid-template-columns: minmax(0, 1fr); }
+  .ml-meal { padding: 0.65rem; }
+  .ml-media { border-radius: 12px; }
+  .ml-dialog {
+    width: min(92vw, 420px);
+    padding: 1rem;
+  }
+  .ml-form-card { padding: 1rem; }
+  .ml-image-upload {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .ml-image-preview {
+    width: 100%;
+    max-width: 240px;
+    flex-basis: auto;
+    aspect-ratio: 4 / 3;
+  }
+  .ml-image-upload-info {
+    width: 100%;
+  }
+  .ml-actions {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+  .ml-actions .ml-btn {
+    width: 100%;
+  }
 }
+
+@media (max-width: 420px) {
+  .ml-header h1 { font-size: 1.9rem; }
+  .ml-form-title { font-size: 1.7rem; }
+  .ml-header-actions { grid-template-columns: 1fr; }
+  .ml-btn { width: 100%; }
+}
+
 @media (prefers-reduced-motion: reduce) { .ml-btn { transition: none; } }
 
 
