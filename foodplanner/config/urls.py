@@ -14,12 +14,11 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
-from django.contrib import admin
-from django.urls import include, path
-from django.conf import settings
-from django.conf.urls.static import static
-from .seo import robots_txt
-from django.contrib.sitemaps.views import sitemap
+from django.contrib import admin # pyright: ignore[reportMissingModuleSource]
+from django.contrib.sitemaps.views import sitemap # pyright: ignore[reportMissingModuleSource]
+from django.urls import include, path # pyright: ignore[reportMissingModuleSource]
+from django.conf import settings  # pyright: ignore[reportMissingModuleSource]
+from django.conf.urls.static import static  # pyright: ignore[reportMissingModuleSource]
 from config.sitemaps import PublicPagesSitemap
 from config.seo import robots_txt
 
