@@ -852,9 +852,11 @@
   cursor: pointer;
 }
 
-/* ---------- modals (owned by budget.js; visibility = .is-open only) ---------- */
+/* ---------- quick-add sheets and dialogs ---------- */
+html.modal-open,
 body.modal-open {
   overflow: hidden;
+  overscroll-behavior: none;
 }
 
 .bd-modal {
@@ -862,22 +864,33 @@ body.modal-open {
   position: fixed;
   inset: 0;
   z-index: 1000;
+  box-sizing: border-box;
+  padding: max(1rem, env(safe-area-inset-top, 0px)) max(1rem, env(safe-area-inset-right, 0px))
+           max(1rem, env(safe-area-inset-bottom, 0px)) max(1rem, env(safe-area-inset-left, 0px));
   align-items: flex-end;
   justify-content: center;
   background: rgba(23, 21, 18, 0.5);
   overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
 }
 
 .bd-modal.is-open {
   display: flex;
 }
 
-.bd-sheet {
+.bd-modal .bd-sheet {
+  box-sizing: border-box;
   width: 100%;
   max-width: 520px;
   max-height: 88vh;
-  max-height: 88dvh;
+  max-height: calc(100vh - 2rem - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
+  max-height: calc(100dvh - 2rem - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
+  min-height: 0;
+  margin: 0;
   overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
   padding: 20px;
   color: var(--bd-text);
   background: var(--bd-surface);
@@ -927,7 +940,7 @@ body.modal-open {
     align-items: center;
   }
 
-  .bd-sheet {
+  .bd-modal .bd-sheet {
     border-radius: 16px;
   }
 }
@@ -955,6 +968,26 @@ body.modal-open {
 }
 
 @media (max-width: 640px) {
+  .bd-modal {
+    padding: env(safe-area-inset-top, 0px) env(safe-area-inset-right, 0px) 0 env(safe-area-inset-left, 0px);
+  }
+
+  .bd-modal .bd-sheet {
+    width: 100%;
+    max-width: none;
+    max-height: calc(100vh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
+    max-height: calc(100dvh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
+    padding: 16px 16px calc(16px + env(safe-area-inset-bottom, 0px));
+    border-radius: 16px 16px 0 0;
+  }
+
+  .bd-modal .bd-field input,
+  .bd-modal .bd-field select,
+  .bd-modal .bd-field textarea {
+    min-height: 44px;
+    font-size: 16px;
+  }
+
   .bd-header-actions {
     width: 100%;
   }
