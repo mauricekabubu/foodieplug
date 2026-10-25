@@ -490,6 +490,10 @@ body.drawer-open .sidebar { transform: translateX(0); }
 
 body.modal-open { overflow: hidden; overscroll-behavior: none; }
 
+@media (max-width: 640px) {
+  html.modal-open { overflow: hidden; overscroll-behavior: none; }
+}
+
 .mp-modal {
   display: none;
   position: fixed; inset: 0; z-index: 1000;
@@ -638,22 +642,34 @@ body.modal-open { overflow: hidden; overscroll-behavior: none; }
   .mp-field-row { grid-template-columns: minmax(0, 1fr); gap: 0; }
 
   .mp-modal {
-    place-items: end center;
+    display: none;
+    flex-direction: column;
+    justify-content: flex-end;
+    align-items: stretch;
     top: var(--mp-viewport-offset-top, 0px);
     bottom: auto;
-    height: var(--mp-viewport-height, 100dvh);
+    height: var(--mp-viewport-height, 100vh);
     padding: env(safe-area-inset-top, 0px) env(safe-area-inset-right, 0px)
              0 env(safe-area-inset-left, 0px);
     overflow: hidden;
   }
+  @supports (height: 100dvh) {
+    .mp-modal { height: var(--mp-viewport-height, 100dvh); }
+  }
+  .mp-modal.is-open { display: flex; }
   .mp-panel,
   .mp-panel.is-small {
     width: 100%; max-width: none; margin: 0; border-radius: 16px 16px 0 0;
+    flex: 0 1 auto; align-self: stretch; justify-self: auto;
     max-height: calc(var(--mp-viewport-height, 100vh) - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
-    max-height: calc(var(--mp-viewport-height, 100dvh) - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
     padding: 1rem 1rem calc(1rem + env(safe-area-inset-bottom, 0px));
   }
-  .mp-modal .mp-panel { align-self: end; justify-self: stretch; }
+  @supports (height: 100dvh) {
+    .mp-panel,
+    .mp-panel.is-small {
+      max-height: calc(var(--mp-viewport-height, 100dvh) - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
+    }
+  }
   .mp-modal.is-open .mp-panel { animation: mp-fade 0.15s ease; }
   .tt-cell { min-height: 104px; padding: 0.3rem; }
   .tt-meal { min-height: 98px; padding: 0.4rem; }
