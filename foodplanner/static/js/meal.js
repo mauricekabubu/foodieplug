@@ -1,26 +1,22 @@
 /**
  * FoodiePlug — Meal Planner script
- * static/js/meals.js
+ * static/js/meal.js
  *
  * Owns everything specific to the weekly timetable page:
- *   - Add meal / meal options (edit servings, move, duplicate) / remove modals
+ *   - Native Add Meal / meal options / removal dialogs
  *   - filling those modals from the clicked timetable cell
  *   - pantry availability preview in the Add meal modal
  *   - "add missing items to shopping list" form wiring
  *   - double-submit protection on every planner form
  *   - scrolling the timetable so today's column is visible on small screens
  *
- * dashboard.js stays global. This file's click handler runs in the capture
- * phase and stops propagation for this page's modal triggers, so a generic
- * [data-open-modal] handler elsewhere can never double-handle them.
+ * dashboard.js continues to own shared navigation and theme behavior. This
+ * controller intercepts only triggers that target one of these planner dialogs.
  *
  * All forms are normal Django POSTs (no AJAX); CSRF tokens are untouched.
  */
 (function () {
   'use strict';
-
-  var OPEN = 'is-open';
-  var LOCK = 'modal-open';
 
   var page = document.getElementById('mp-page');
   if (!page) return;
@@ -32,11 +28,15 @@
   var modals = [].slice.call(document.querySelectorAll('.mp-modal'));
   var urls = $('mp-urls') ? $('mp-urls').dataset : {};
   var mealOptions = [];
-  try { mealOptions = JSON.parse($('meal-options') ? $('meal-options').textContent : '[]') || []; } catch (e) { mealOptions = []; }
+  try {
+    var parsedMealOptions = JSON.parse($('meal-options') ? $('meal-options').textContent : '[]');
+    mealOptions = Array.isArray(parsedMealOptions)
+      ? parsedMealOptions.filter(function (meal) { return meal && typeof meal === 'object'; })
+      : [];
+  } catch (e) { mealOptions = []; }
 
   var current = null;     // data of the meal cell whose options are open
   var modalStack = [];
-  var viewportTracking = false;
 
   /* ------------------------------------------------------------------ helpers */
   
@@ -68,40 +68,18 @@
     for (var i = 0; i < candidates.length; i += 1) {
       if (isUsable(candidates[i])) { focusElement(candidates[i]); return; }
     }
-    focusElement(modal.querySelector('[role="dialog"]'));
+    focusElement(modal.querySelector('.mp-panel'));
   }
 
-  function syncModalViewport() {
-    var modal = topModal();
-    var viewport = window.visualViewport;
-    if (!modal || !viewport || window.innerWidth > 640) return;
-    var height = viewport.height + 'px';
-    var offset = viewport.offsetTop + 'px';
-    if (modal.style.getPropertyValue('--mp-viewport-height') !== height) {
-      modal.style.setProperty('--mp-viewport-height', height);
-    }
-    if (modal.style.getPropertyValue('--mp-viewport-offset-top') !== offset) {
-      modal.style.setProperty('--mp-viewport-offset-top', offset);
-    }
-  }
-
-  function startViewportTracking() {
-    if (!window.visualViewport || viewportTracking) return;
-    window.visualViewport.addEventListener('resize', syncModalViewport);
-    window.visualViewport.addEventListener('scroll', syncModalViewport);
-    viewportTracking = true;
-  }
-
-  function stopViewportTracking() {
-    if (window.visualViewport && viewportTracking) {
-      window.visualViewport.removeEventListener('resize', syncModalViewport);
-      window.visualViewport.removeEventListener('scroll', syncModalViewport);
-    }
-    viewportTracking = false;
-    modals.forEach(function (modal) {
-      modal.style.removeProperty('--mp-viewport-height');
-      modal.style.removeProperty('--mp-viewport-offset-top');
-    });
+  function restoreCoveredParent(parentEntry) {
+    if (!parentEntry) return;
+    var parent = parentEntry.modal;
+    parent.classList.remove('is-covered');
+    if (!parentEntry.inertBeforeCover) parent.removeAttribute('inert');
+    if (parentEntry.ariaBeforeCover === null) parent.removeAttribute('aria-hidden');
+    else parent.setAttribute('aria-hidden', parentEntry.ariaBeforeCover);
+    delete parentEntry.inertBeforeCover;
+    delete parentEntry.ariaBeforeCover;
   }
 
   function dismissCompetingUi() {
@@ -109,31 +87,25 @@
       var drawerClose = $('drawer-close');
       if (drawerClose) drawerClose.click();
     }
-    document.querySelectorAll('.dropdown.is-open').forEach(function (dropdown) {
+    document.querySelectorAll('.mobile-topbar .dropdown.is-open').forEach(function (dropdown) {
       dropdown.classList.remove('is-open');
       var trigger = dropdown.querySelector('[aria-haspopup="true"]');
       if (trigger) trigger.setAttribute('aria-expanded', 'false');
     });
   }
 
-  function updateScrollLock() {
-    var locked = modalStack.length > 0;
-    document.body.classList.toggle(LOCK, locked);
-    document.documentElement.classList.toggle(LOCK, locked && window.innerWidth <= 640);
-  }
-
   function openModal(modal, trigger) {
     var parent = topModal();
     var nested = parent && parent.id === 'meal-modal' && modal.id === 'remove-meal-modal';
+    var parentEntry = null;
 
     if (parent && nested) {
-      var parentEntry = modalStack[modalStack.length - 1];
+      parentEntry = modalStack[modalStack.length - 1];
       parentEntry.inertBeforeCover = parent.hasAttribute('inert');
       parentEntry.ariaBeforeCover = parent.getAttribute('aria-hidden');
       parent.setAttribute('inert', '');
       parent.setAttribute('aria-hidden', 'true');
       parent.classList.add('is-covered');
-      modal.classList.add('is-nested');
     } else if (parent) {
       while (modalStack.length) closeTop(false);
       dismissCompetingUi();
@@ -141,13 +113,19 @@
       dismissCompetingUi();
     }
 
-    modal.removeAttribute('inert');
-    modal.classList.add(OPEN);
-    modal.setAttribute('aria-hidden', 'false');
+    try {
+      if (typeof modal.showModal !== 'function') {
+        if (parent && nested) restoreCoveredParent(parentEntry);
+        return;
+      }
+      modal.removeAttribute('inert');
+      modal.showModal();
+    } catch (error) {
+      if (parent && nested) restoreCoveredParent(parentEntry);
+      return;
+    }
+
     modalStack.push({ modal: modal, opener: trigger });
-    updateScrollLock();
-    startViewportTracking();
-    syncModalViewport();
     window.requestAnimationFrame(function () {
       if (topModal() === modal) focusFirst(modal);
     });
@@ -156,26 +134,10 @@
   function closeTop(restoreFocus) {
     if (!modalStack.length) return;
     var entry = modalStack.pop();
-    entry.modal.classList.remove(OPEN, 'is-nested', 'is-covered');
-    entry.modal.setAttribute('aria-hidden', 'true');
-    entry.modal.removeAttribute('inert');
-    entry.modal.style.removeProperty('--mp-viewport-height');
-    entry.modal.style.removeProperty('--mp-viewport-offset-top');
-
     var parentEntry = modalStack.length ? modalStack[modalStack.length - 1] : null;
-    if (parentEntry) {
-      var parent = parentEntry.modal;
-      parent.classList.remove('is-covered');
-      if (!parentEntry.inertBeforeCover) parent.removeAttribute('inert');
-      if (parentEntry.ariaBeforeCover === null) parent.removeAttribute('aria-hidden');
-      else parent.setAttribute('aria-hidden', parentEntry.ariaBeforeCover);
-      delete parentEntry.inertBeforeCover;
-      delete parentEntry.ariaBeforeCover;
-    }
+    restoreCoveredParent(parentEntry);
 
-    updateScrollLock();
-    if (modalStack.length) syncModalViewport();
-    else stopViewportTracking();
+    if (entry.modal.open) entry.modal.close();
 
     if (restoreFocus !== false) {
       if (focusElement(entry.opener)) return;
@@ -191,12 +153,21 @@
     while (modalStack.length) closeTop(false);
   }
 
-  var drawerObserver = new MutationObserver(function () {
-    document.documentElement.classList.toggle(
-      'drawer-open', window.innerWidth <= 640 && document.body.classList.contains('drawer-open')
-    );
+  modals.forEach(function (modal) {
+    modal.addEventListener('cancel', function (event) {
+      event.preventDefault();
+      if (topModal() === modal) closeTop();
+    });
   });
+
+  function syncDrawerScrollLock() {
+    document.documentElement.classList.toggle(
+      'drawer-open', window.innerWidth <= 980 && document.body.classList.contains('drawer-open')
+    );
+  }
+  var drawerObserver = new MutationObserver(syncDrawerScrollLock);
   drawerObserver.observe(document.body, { attributes: true, attributeFilter: ['class'] });
+  syncDrawerScrollLock();
 
   function resetForms(scope) {
     [].slice.call((scope || document).querySelectorAll('.mp-modal form')).forEach(function (f) {
@@ -212,23 +183,28 @@
   /* ------------------------------------------------------------------ add meal modal */
   function renderAvailability() {
     var box = $('add-meal-avail');
-    var id = $('add-meal-select').value;
+    var select = $('add-meal-select');
+    if (!box || !select) return;
+    var id = select.value;
     var meal = mealOptions.filter(function (m) { return String(m.id) === String(id); })[0];
 
     if (!meal) { box.hidden = true; return; }
 
+    var total = Number(meal.total) || 0;
+    var available = Number(meal.available) || 0;
+    var missing = Array.isArray(meal.missing) ? meal.missing : [];
     box.hidden = false;
     box.className = 'mp-avail';
 
-    if (!meal.total) {
+    if (!total) {
       box.textContent = 'No ingredients are listed for this meal yet.';
-    } else if (!meal.missing.length) {
+    } else if (!missing.length) {
       box.classList.add('is-ready');
-      box.textContent = '\u2713 All ' + meal.total + ' ingredients are in your pantry (for 1 serving).';
+      box.textContent = '\u2713 All ' + total + ' ingredients are in your pantry (for 1 serving).';
     } else {
-      box.classList.add(meal.available ? 'is-partial' : 'is-missing');
-      box.textContent = meal.available + ' of ' + meal.total + ' ingredients available. Missing: ' +
-                        meal.missing.join(', ') + '.';
+      box.classList.add(available ? 'is-partial' : 'is-missing');
+      box.textContent = available + ' of ' + total + ' ingredients available. Missing: ' +
+                        missing.join(', ') + '.';
     }
   }
 
@@ -374,28 +350,6 @@
     }
   }, true);
 
-  document.addEventListener('keydown', function (e) {
-    var top = topModal();
-    if (!top) return;
-
-    if (e.key === 'Escape' || e.key === 'Esc') {
-      e.preventDefault();
-      e.stopPropagation();
-      closeTop();
-      return;
-    }
-
-    if (e.key === 'Tab') {
-      var candidates = top.querySelectorAll('a[href], button:not([disabled]), input:not([disabled]):not([type="hidden"]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])');
-      var focusable = [].filter.call(candidates, isUsable);
-      if (!focusable.length) { e.preventDefault(); focusFirst(top); return; }
-      var first = focusable[0], last = focusable[focusable.length - 1];
-      if (!top.contains(document.activeElement)) { e.preventDefault(); focusElement(e.shiftKey ? last : first); }
-      else if (e.shiftKey && document.activeElement === first) { e.preventDefault(); focusElement(last); }
-      else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); focusElement(first); }
-    }
-  });
-
   // dashboard.js toggles these menus on the trigger itself. This listener runs
   // after that handler and keeps their accessibility state in sync.
   document.querySelectorAll('.mobile-topbar .dropdown > [aria-haspopup="true"]').forEach(function (trigger) {
@@ -405,6 +359,14 @@
         var dropdown = trigger.closest('.dropdown');
         trigger.setAttribute('aria-expanded', dropdown && dropdown.classList.contains('is-open') ? 'true' : 'false');
       });
+    });
+  });
+  var drawerOpenButton = $('drawer-open');
+  if (drawerOpenButton) drawerOpenButton.addEventListener('click', function () {
+    document.querySelectorAll('.mobile-topbar .dropdown.is-open').forEach(function (dropdown) {
+      dropdown.classList.remove('is-open');
+      var trigger = dropdown.querySelector('[aria-haspopup="true"]');
+      if (trigger) trigger.setAttribute('aria-expanded', 'false');
     });
   });
   document.addEventListener('click', function (e) {
