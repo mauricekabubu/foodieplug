@@ -68,7 +68,7 @@ def get_current_budget(user, date=None):
         user=user,
         start_date__lte=date,
         end_date__gte=date
-    ).order_by("-start_date").first()
+    ).order_by("-start_date", "-pk").first()
 
 
 # Add an expense to a budget
