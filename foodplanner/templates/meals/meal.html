@@ -13,7 +13,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Fraunces:opsz,wght@9..144,560&display=swap" rel="stylesheet">
 <link rel="stylesheet" type="text/css" href="{% static 'css/food_library.css' %}">
-<link rel="stylesheet" type="text/css" href="{% static 'css/meal.css' %}?v=mobile-sheet-3">
+<link rel="stylesheet" type="text/css" href="{% static 'css/meal.css' %}?v=modal-stack-4">
 <link rel="stylesheet" type="text/css" href="{% static 'css/toasts.css' %}">
 <script>
   (function () {
@@ -42,13 +42,13 @@
   </a>
   <div class="mobile-topbar-actions">
     <div class="dropdown">
-      <button type="button" class="icon-btn" aria-label="Notifications" aria-haspopup="true">
+      <button type="button" class="icon-btn" aria-label="Notifications" aria-haspopup="true" aria-expanded="false">
         <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 10a6 6 0 1 1 12 0c0 4 1.5 5.5 1.5 5.5H4.5S6 14 6 10z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/><path d="M10 19a2 2 0 0 0 4 0" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
       </button>
       <div class="dropdown-panel" role="menu"><h4>Notifications</h4><p style="font-size:0.85rem;color:var(--muted);padding:0.5rem;">You're all caught up.</p></div>
     </div>
     <div class="dropdown">
-      <button type="button" class="icon-btn" aria-label="Account menu" aria-haspopup="true">
+      <button type="button" class="icon-btn" aria-label="Account menu" aria-haspopup="true" aria-expanded="false">
         <span class="avatar" style="width:30px;height:30px;font-size:0.72rem;">{{ user.first_name|default:user.username|slice:":1"|upper }}</span>
       </button>
       <div class="dropdown-panel" role="menu">
@@ -331,7 +331,7 @@
 
 <!-- ============ ADD MEAL MODAL ============ -->
 <div class="mp-modal" id="add-meal-modal" aria-hidden="true">
-  <div class="mp-panel" role="dialog" aria-modal="true" aria-labelledby="add-meal-title" aria-describedby="add-meal-description">
+  <div class="mp-panel" role="dialog" aria-modal="true" aria-labelledby="add-meal-title" aria-describedby="add-meal-description" tabindex="-1">
     <div class="mp-panel-head">
       <div><h2 id="add-meal-title">Add meal</h2><p id="add-meal-description">Choose a meal and where it goes in your week.</p></div>
       <button type="button" class="icon-btn" data-close-modal aria-label="Close"><svg viewBox="0 0 24 24" width="20" height="20" fill="none"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></button>
@@ -376,7 +376,7 @@
 
 <!-- ============ MEAL OPTIONS MODAL (edit / move / duplicate / remove) ============ -->
 <div class="mp-modal" id="meal-modal" aria-hidden="true">
-  <div class="mp-panel" role="dialog" aria-modal="true" aria-labelledby="meal-modal-title" aria-describedby="meal-modal-slot">
+  <div class="mp-panel" role="dialog" aria-modal="true" aria-labelledby="meal-modal-title" aria-describedby="meal-modal-slot" tabindex="-1">
     <div class="mp-panel-head">
       <div><h2 id="meal-modal-title">Meal</h2><p id="meal-modal-slot"></p></div>
       <button type="button" class="icon-btn" data-close-modal aria-label="Close"><svg viewBox="0 0 24 24" width="20" height="20" fill="none"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></button>
@@ -467,7 +467,7 @@
 
 <!-- ============ REMOVE CONFIRMATION MODAL ============ -->
 <div class="mp-modal" id="remove-meal-modal" aria-hidden="true">
-  <div class="mp-panel is-small" role="dialog" aria-modal="true" aria-labelledby="remove-meal-title" aria-describedby="remove-meal-text">
+  <div class="mp-panel is-small" role="dialog" aria-modal="true" aria-labelledby="remove-meal-title" aria-describedby="remove-meal-text" tabindex="-1">
     <div class="mp-panel-head">
       <div><h2 id="remove-meal-title">Remove this meal?</h2><p id="remove-meal-text">It will be taken off your plan.</p></div>
       <button type="button" class="icon-btn" data-close-modal aria-label="Close"><svg viewBox="0 0 24 24" width="20" height="20" fill="none"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></button>
@@ -486,7 +486,7 @@
 {{ meal_options|json_script:"meal-options" }}
 
 <script src="{% static 'js/dashboard.js' %}"></script>
-<script src="{% static 'js/meal.js' %}?v=mobile-sheet-3"></script>
+<script src="{% static 'js/meal.js' %}?v=modal-stack-4"></script>
 <script src="{% static 'js/toasts.js' %}"></script>
 
 </body>
