@@ -13,6 +13,71 @@
     --edit-shadow: 0 8px 28px rgba(22, 60, 37, 0.045);
 }
 
+.mobile-topbar .sidebar-toggle {
+    width: 44px;
+    height: 44px;
+    display: grid;
+    place-items: center;
+    padding: 0;
+    color: var(--ink, #2B2620);
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: 10px;
+}
+
+.mobile-topbar .sidebar-toggle svg { width: 22px; height: 22px; }
+.mobile-topbar .mobile-brand {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    min-width: 0;
+    font-weight: 700;
+}
+.mobile-topbar .theme-toggle[aria-label="Toggle theme"] {
+    width: 44px;
+    height: 44px;
+    flex: 0 0 44px;
+    display: grid;
+    place-items: center;
+    padding: 0;
+    color: var(--ink, #2B2620);
+    cursor: pointer;
+}
+
+.sidebar-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 45;
+    background: rgba(20, 16, 10, 0.4);
+}
+
+body.drawer-open .sidebar-overlay { display: block; }
+
+.sidebar#app-sidebar {
+    z-index: 50;
+    padding: 1.2rem 0 1rem;
+}
+
+.sidebar#app-sidebar .sidebar-brand { align-items: center; }
+.sidebar#app-sidebar .brand-mark {
+    display: grid;
+    width: 30px;
+    height: 30px;
+    flex: 0 0 30px;
+    place-items: center;
+    border-radius: 9px;
+    color: #fff;
+    background: var(--brand, #16794B);
+    font-weight: 800;
+}
+
+.sidebar#app-sidebar .nav-item { min-height: 44px; }
+
+@media (min-width: 981px) {
+    .sidebar#app-sidebar { display: none; }
+}
+
 body {
     background: var(--edit-page);
 }
