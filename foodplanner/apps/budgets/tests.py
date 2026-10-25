@@ -1,10 +1,12 @@
 from datetime import date, timedelta
 from decimal import Decimal
+from unittest.mock import patch
 
 from django.contrib.auth import get_user_model
 from django.contrib.messages import get_messages
 from django.test import TestCase
 from django.urls import reverse
+from django.utils import timezone
 
 from .models import Budget, BudgetEntry
 
@@ -173,3 +175,108 @@ class AddExpenseTests(TestCase):
             fetch_redirect_response=False,
         )
         self.assertEqual(BudgetEntry.objects.count(), 0)
+
+
+class BudgetOverviewTests(TestCase):
+    def setUp(self):
+        user_model = get_user_model()
+        self.user = user_model.objects.create_user(
+            username="overview-reader",
+            email="overview-reader@example.com",
+            password="safe-test-password",
+        )
+        self.other_user = user_model.objects.create_user(
+            username="private-budget-owner",
+            email="private-budget-owner@example.com",
+            password="safe-test-password",
+        )
+        self.client.force_login(self.user)
+        self.today = timezone.localdate()
+        self.dashboard_url = reverse("budgets:dashboard")
+
+    def make_budget(self, user=None, *, start=None, end=None, name="Food budget", amount="1000.00"):
+        return Budget.objects.create(
+            user=user or self.user,
+            name=name,
+            amount=Decimal(amount),
+            start_date=start or self.today,
+            end_date=end or self.today + timedelta(days=30),
+        )
+
+    def test_newly_created_budget_is_selected_in_overview_using_local_date(self):
+        start = self.today
+        end = self.today + timedelta(days=30)
+        created = self.client.post(
+            reverse("budgets:create"),
+            {
+                "name": "Local date budget",
+                "amount": "9000.00",
+                "start_date": start.isoformat(),
+                "end_date": end.isoformat(),
+            },
+        )
+        budget = Budget.objects.get(user=self.user, name="Local date budget")
+        self.assertRedirects(
+            created,
+            reverse("budgets:detail", args=[budget.pk]),
+            fetch_redirect_response=False,
+        )
+
+        # Reproduce the former server-date mismatch: the server is still on
+        # yesterday while Django's active timezone has moved to the new day.
+        with patch("apps.budgets.views.date") as mocked_date:
+            mocked_date.today.return_value = self.today - timedelta(days=1)
+            response = self.client.get(self.dashboard_url)
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context["budget"], budget)
+        self.assertIn(budget, response.context["budgets"])
+        self.assertEqual(response.context["total_spent"], Decimal("0"))
+        self.assertEqual(response.context["remaining_budget"], Decimal("9000.00"))
+        self.assertContains(response, "Local date budget")
+        self.assertNotContains(response, "No budget is active today")
+
+    def test_overlapping_budgets_select_latest_start_then_latest_id(self):
+        earlier_start = self.today - timedelta(days=4)
+        older = self.make_budget(start=earlier_start, name="Older overlap")
+        later_start = self.make_budget(start=self.today - timedelta(days=2), name="Later overlap")
+        same_start_newer = self.make_budget(start=later_start.start_date, name="Newest overlap")
+
+        response = self.client.get(self.dashboard_url)
+
+        self.assertEqual(response.context["budget"], same_start_newer)
+        self.assertIn(older, response.context["budgets"])
+        self.assertIn(later_start, response.context["budgets"])
+
+    def test_future_and_expired_budgets_remain_listed_but_do_not_fill_overview(self):
+        expired = self.make_budget(
+            start=self.today - timedelta(days=10),
+            end=self.today - timedelta(days=1),
+            name="Expired budget",
+        )
+        future = self.make_budget(
+            start=self.today + timedelta(days=1),
+            end=self.today + timedelta(days=20),
+            name="Future budget",
+        )
+
+        response = self.client.get(self.dashboard_url)
+
+        self.assertIsNone(response.context["budget"])
+        self.assertIn(expired, response.context["budgets"])
+        self.assertIn(future, response.context["budgets"])
+        self.assertContains(response, "No budget is active today")
+        self.assertContains(response, "Set Budget")
+
+    def test_other_users_budgets_do_not_appear_in_overview_or_list(self):
+        private_budget = self.make_budget(
+            user=self.other_user,
+            name="Private household budget",
+        )
+
+        response = self.client.get(self.dashboard_url)
+
+        self.assertIsNone(response.context["budget"])
+        self.assertEqual(list(response.context["budgets"]), [])
+        self.assertNotContains(response, private_budget.name)
+        self.assertContains(response, "No budget yet")
