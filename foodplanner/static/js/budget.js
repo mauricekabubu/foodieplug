@@ -34,7 +34,6 @@
   /* ------------------------------------------------------------------ modals */
   var modals = [].slice.call(document.querySelectorAll('.bd-modal'));
   var origin = null;
-  var pressOnBackdrop = false;
 
   function openModals() { return modals.filter(function (m) { return m.classList.contains('is-open'); }); }
 
@@ -44,9 +43,12 @@
     modal.classList.add('is-open');
     modal.setAttribute('aria-hidden', 'false');
     document.body.classList.add('modal-open');
+    document.documentElement.classList.add('modal-open');
     window.requestAnimationFrame(function () {
-      var first = modal.querySelector('input:not([type="hidden"]), textarea, select');
-      if (first) first.focus();
+      var first = modal.querySelector('input:not([type="hidden"]):not([disabled]), textarea:not([disabled]), select:not([disabled])');
+      if (first) {
+        try { first.focus({ preventScroll: true }); } catch (error) { first.focus(); }
+      }
     });
   }
 
@@ -55,6 +57,7 @@
     modal.setAttribute('aria-hidden', 'true');
     if (!openModals().length) {
       document.body.classList.remove('modal-open');
+      document.documentElement.classList.remove('modal-open');
       if (origin && document.body.contains(origin)) origin.focus();
       origin = null;
     }
@@ -85,18 +88,14 @@
       closeModal(top);
       return;
     }
-    if (e.target === top && pressOnBackdrop) { e.stopPropagation(); closeModal(top); }
-  }, true);
-
-  document.addEventListener('mousedown', function (e) {
-    pressOnBackdrop = !!(e.target.classList && e.target.classList.contains('bd-modal'));
+    if (e.target === top) { e.stopPropagation(); closeModal(top); }
   }, true);
 
   document.addEventListener('keydown', function (e) {
     var top = openModals().pop();
     if (!top) return;
 
-    if (e.key === 'Escape') { e.preventDefault(); closeModal(top); return; }
+    if (e.key === 'Escape') { e.preventDefault(); e.stopPropagation(); closeModal(top); return; }
 
     if (e.key === 'Tab') {                                  // keep focus inside the dialog
       var f = top.querySelectorAll('a[href], button:not([disabled]), input:not([disabled]):not([type="hidden"]), select:not([disabled]), textarea:not([disabled])');
