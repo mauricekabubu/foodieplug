@@ -59,6 +59,32 @@
 
     <div class="sidebar-overlay" aria-hidden="true"></div>
 
+    <aside class="sidebar" id="app-sidebar" aria-label="Primary navigation">
+        <div class="sidebar-brand">
+            <span class="brand-mark" aria-hidden="true">F</span>
+            <span>FoodiePlug</span>
+            <button type="button" class="icon-btn" id="drawer-close" aria-label="Close navigation" style="margin-left:auto;">
+                <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>
+            </button>
+        </div>
+        <nav class="sidebar-nav">
+            <a href="{% url 'dashboard' %}" class="nav-item">Overview</a>
+            <a href="{% url 'meals:meal_library' %}" class="nav-item">My Meals</a>
+            <a href="{% url 'meals:timetable' %}" class="nav-item">Meal Planner</a>
+            <a href="{% url 'pantry:pantry' %}" class="nav-item">Pantry</a>
+            <a href="{% url 'shopping_lists' %}" class="nav-item">Shopping</a>
+            <a href="{% url 'budgets:dashboard' %}" class="nav-item">Budget</a>
+            <a href="{% url 'foods:foods' %}" class="nav-item is-active" aria-current="page">Food Library</a>
+            <a href="{% url 'ai:page' %}" class="nav-item">AI Assistant</a>
+            <a href="{% url 'insights:overview' %}" class="nav-item">Insights</a>
+            <a href="{% url 'settings' %}" class="nav-item">Settings</a>
+            <a href="{% url 'help' %}" class="nav-item">Help</a>
+        </nav>
+        <div class="sidebar-footer">
+            <a href="{% url 'profile' %}" class="profile-menu-item">Account profile</a>
+        </div>
+    </aside>
+
    
 
     <!-- Dashboard content -->
