@@ -24,37 +24,19 @@
 
   var page = document.getElementById('mp-page');
   if (!page) return;
+  if (page.dataset.mealModalController === 'ready') return;
+  page.dataset.mealModalController = 'ready';
 
   function $(id) { return document.getElementById(id); }
 
   var modals = [].slice.call(document.querySelectorAll('.mp-modal'));
   var urls = $('mp-urls') ? $('mp-urls').dataset : {};
   var mealOptions = [];
-  try { mealOptions = JSON.parse($('meal-options').textContent) || []; } catch (e) { mealOptions = []; }
+  try { mealOptions = JSON.parse($('meal-options') ? $('meal-options').textContent : '[]') || []; } catch (e) { mealOptions = []; }
 
   var current = null;     // data of the meal cell whose options are open
-  var origin = null;      // element to return focus to when everything closes
-  var pressOnBackdrop = false;
-
-  function syncModalViewport() {
-    var viewport = window.visualViewport;
-    if (!viewport || window.innerWidth > 640) return;
-    modals.forEach(function (modal) {
-      if (!modal.classList.contains(OPEN)) return;
-      modal.style.setProperty('--mp-viewport-height', viewport.height + 'px');
-      modal.style.setProperty('--mp-viewport-offset-top', viewport.offsetTop + 'px');
-    });
-  }
-
-  function clearModalViewport(modal) {
-    modal.style.removeProperty('--mp-viewport-height');
-    modal.style.removeProperty('--mp-viewport-offset-top');
-  }
-
-  if (window.visualViewport) {
-    window.visualViewport.addEventListener('resize', syncModalViewport);
-    window.visualViewport.addEventListener('scroll', syncModalViewport);
-  }
+  var modalStack = [];
+  var viewportTracking = false;
 
   /* ------------------------------------------------------------------ helpers */
   
@@ -66,43 +48,155 @@
   }
 
 
-  function openModals() {
-    return modals.filter(function (m) { return m.classList.contains(OPEN); });
+  function topModal() {
+    return modalStack.length ? modalStack[modalStack.length - 1].modal : null;
+  }
+
+  function isUsable(element) {
+    return !!(element && element.isConnected && !element.disabled &&
+      !element.closest('[hidden], [inert]') && element.getClientRects().length);
+  }
+
+  function focusElement(element) {
+    if (!isUsable(element)) return false;
+    try { element.focus({ preventScroll: true }); } catch (e) { element.focus(); }
+    return true;
   }
 
   function focusFirst(modal) {
-    var target = modal.querySelector('select, input:not([type="hidden"]), textarea, button:not([data-close-modal])') ||
-                 modal.querySelector('button');
-    if (target) { try { target.focus({ preventScroll: true }); } catch (e) { target.focus(); } }
+    var candidates = modal.querySelectorAll('[autofocus], select, input:not([type="hidden"]), textarea, button:not([disabled]), a[href]');
+    for (var i = 0; i < candidates.length; i += 1) {
+      if (isUsable(candidates[i])) { focusElement(candidates[i]); return; }
+    }
+    focusElement(modal.querySelector('[role="dialog"]'));
+  }
+
+  function syncModalViewport() {
+    var modal = topModal();
+    var viewport = window.visualViewport;
+    if (!modal || !viewport || window.innerWidth > 640) return;
+    var height = viewport.height + 'px';
+    var offset = viewport.offsetTop + 'px';
+    if (modal.style.getPropertyValue('--mp-viewport-height') !== height) {
+      modal.style.setProperty('--mp-viewport-height', height);
+    }
+    if (modal.style.getPropertyValue('--mp-viewport-offset-top') !== offset) {
+      modal.style.setProperty('--mp-viewport-offset-top', offset);
+    }
+  }
+
+  function startViewportTracking() {
+    if (!window.visualViewport || viewportTracking) return;
+    window.visualViewport.addEventListener('resize', syncModalViewport);
+    window.visualViewport.addEventListener('scroll', syncModalViewport);
+    viewportTracking = true;
+  }
+
+  function stopViewportTracking() {
+    if (window.visualViewport && viewportTracking) {
+      window.visualViewport.removeEventListener('resize', syncModalViewport);
+      window.visualViewport.removeEventListener('scroll', syncModalViewport);
+    }
+    viewportTracking = false;
+    modals.forEach(function (modal) {
+      modal.style.removeProperty('--mp-viewport-height');
+      modal.style.removeProperty('--mp-viewport-offset-top');
+    });
+  }
+
+  function dismissCompetingUi() {
+    if (document.body.classList.contains('drawer-open')) {
+      var drawerClose = $('drawer-close');
+      if (drawerClose) drawerClose.click();
+    }
+    document.querySelectorAll('.dropdown.is-open').forEach(function (dropdown) {
+      dropdown.classList.remove('is-open');
+      var trigger = dropdown.querySelector('[aria-haspopup="true"]');
+      if (trigger) trigger.setAttribute('aria-expanded', 'false');
+    });
+  }
+
+  function updateScrollLock() {
+    var locked = modalStack.length > 0;
+    document.body.classList.toggle(LOCK, locked);
+    document.documentElement.classList.toggle(LOCK, locked && window.innerWidth <= 640);
   }
 
   function openModal(modal, trigger) {
-    var others = openModals();
-    others.forEach(function (o) { o.classList.remove(OPEN); o.setAttribute('aria-hidden', 'true'); });
-    if (!others.length) origin = trigger;      // keep the original card when chaining modals
+    var parent = topModal();
+    var nested = parent && parent.id === 'meal-modal' && modal.id === 'remove-meal-modal';
 
+    if (parent && nested) {
+      var parentEntry = modalStack[modalStack.length - 1];
+      parentEntry.inertBeforeCover = parent.hasAttribute('inert');
+      parentEntry.ariaBeforeCover = parent.getAttribute('aria-hidden');
+      parent.setAttribute('inert', '');
+      parent.setAttribute('aria-hidden', 'true');
+      parent.classList.add('is-covered');
+      modal.classList.add('is-nested');
+    } else if (parent) {
+      while (modalStack.length) closeTop(false);
+      dismissCompetingUi();
+    } else {
+      dismissCompetingUi();
+    }
+
+    modal.removeAttribute('inert');
     modal.classList.add(OPEN);
     modal.setAttribute('aria-hidden', 'false');
-    document.body.classList.add(LOCK);
-    if (window.innerWidth <= 640) document.documentElement.classList.add(LOCK);
+    modalStack.push({ modal: modal, opener: trigger });
+    updateScrollLock();
+    startViewportTracking();
     syncModalViewport();
-    window.requestAnimationFrame(function () { focusFirst(modal); });
+    window.requestAnimationFrame(function () {
+      if (topModal() === modal) focusFirst(modal);
+    });
   }
 
-  function closeModal(modal, restoreFocus) {
-    modal.classList.remove(OPEN);
-    modal.setAttribute('aria-hidden', 'true');
-    clearModalViewport(modal);
+  function closeTop(restoreFocus) {
+    if (!modalStack.length) return;
+    var entry = modalStack.pop();
+    entry.modal.classList.remove(OPEN, 'is-nested', 'is-covered');
+    entry.modal.setAttribute('aria-hidden', 'true');
+    entry.modal.removeAttribute('inert');
+    entry.modal.style.removeProperty('--mp-viewport-height');
+    entry.modal.style.removeProperty('--mp-viewport-offset-top');
 
-    if (!openModals().length) {
-      document.body.classList.remove(LOCK);
-      document.documentElement.classList.remove(LOCK);
-      if (restoreFocus !== false && origin && document.body.contains(origin)) {
-        try { origin.focus({ preventScroll: true }); } catch (e) { origin.focus(); }
+    var parentEntry = modalStack.length ? modalStack[modalStack.length - 1] : null;
+    if (parentEntry) {
+      var parent = parentEntry.modal;
+      parent.classList.remove('is-covered');
+      if (!parentEntry.inertBeforeCover) parent.removeAttribute('inert');
+      if (parentEntry.ariaBeforeCover === null) parent.removeAttribute('aria-hidden');
+      else parent.setAttribute('aria-hidden', parentEntry.ariaBeforeCover);
+      delete parentEntry.inertBeforeCover;
+      delete parentEntry.ariaBeforeCover;
+    }
+
+    updateScrollLock();
+    if (modalStack.length) syncModalViewport();
+    else stopViewportTracking();
+
+    if (restoreFocus !== false) {
+      if (focusElement(entry.opener)) return;
+      if (parentEntry) focusFirst(parentEntry.modal);
+      else {
+        var fallback = page.querySelector('[data-open-modal]:not([disabled])');
+        focusElement(fallback);
       }
-      origin = null;
     }
   }
+
+  function closeAll() {
+    while (modalStack.length) closeTop(false);
+  }
+
+  var drawerObserver = new MutationObserver(function () {
+    document.documentElement.classList.toggle(
+      'drawer-open', window.innerWidth <= 640 && document.body.classList.contains('drawer-open')
+    );
+  });
+  drawerObserver.observe(document.body, { attributes: true, attributeFilter: ['class'] });
 
   function resetForms(scope) {
     [].slice.call((scope || document).querySelectorAll('.mp-modal form')).forEach(function (f) {
@@ -249,7 +343,9 @@
 
   /* ------------------------------------------------------------------ events */
   document.addEventListener('click', function (e) {
-    var opener = e.target.closest('[data-open-modal]');
+    var target = e.target instanceof Element ? e.target : null;
+    if (!target) return;
+    var opener = target.closest('[data-open-modal]');
     if (opener) {
       var modal = $(opener.dataset.openModal);
       if (modal && modal.classList.contains('mp-modal')) {
@@ -261,44 +357,67 @@
       }
     }
 
-    var top = openModals().pop();
+    var top = topModal();
     if (!top) return;
 
-    var closer = e.target.closest('[data-close-modal]');
+    var closer = target.closest('[data-close-modal]');
     if (closer && top.contains(closer)) {
       e.preventDefault();
       e.stopPropagation();
-      closeModal(top);
+      closeTop();
       return;
     }
 
-    if (e.target === top && pressOnBackdrop) {      // press AND release on the backdrop
+    if (target === top) {
       e.stopPropagation();
-      closeModal(top);
+      closeTop();
     }
   }, true);
 
-  document.addEventListener('mousedown', function (e) {
-    pressOnBackdrop = e.target.classList && e.target.classList.contains('mp-modal');
-  }, true);
-
   document.addEventListener('keydown', function (e) {
-    var top = openModals().pop();
+    var top = topModal();
     if (!top) return;
 
     if (e.key === 'Escape' || e.key === 'Esc') {
       e.preventDefault();
-      closeModal(top);
+      e.stopPropagation();
+      closeTop();
       return;
     }
 
-    if (e.key === 'Tab') {                            // keep focus inside the dialog
-      var f = top.querySelectorAll('a[href], button:not([disabled]), input:not([disabled]):not([type="hidden"]), select:not([disabled]), textarea:not([disabled])');
-      if (!f.length) return;
-      var first = f[0], last = f[f.length - 1];
-      if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
-      else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+    if (e.key === 'Tab') {
+      var candidates = top.querySelectorAll('a[href], button:not([disabled]), input:not([disabled]):not([type="hidden"]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])');
+      var focusable = [].filter.call(candidates, isUsable);
+      if (!focusable.length) { e.preventDefault(); focusFirst(top); return; }
+      var first = focusable[0], last = focusable[focusable.length - 1];
+      if (!top.contains(document.activeElement)) { e.preventDefault(); focusElement(e.shiftKey ? last : first); }
+      else if (e.shiftKey && document.activeElement === first) { e.preventDefault(); focusElement(last); }
+      else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); focusElement(first); }
     }
+  });
+
+  // dashboard.js toggles these menus on the trigger itself. This listener runs
+  // after that handler and keeps their accessibility state in sync.
+  document.querySelectorAll('.mobile-topbar .dropdown > [aria-haspopup="true"]').forEach(function (trigger) {
+    trigger.setAttribute('aria-expanded', 'false');
+    trigger.addEventListener('click', function () {
+      window.requestAnimationFrame(function () {
+        var dropdown = trigger.closest('.dropdown');
+        trigger.setAttribute('aria-expanded', dropdown && dropdown.classList.contains('is-open') ? 'true' : 'false');
+      });
+    });
+  });
+  document.addEventListener('click', function (e) {
+    document.querySelectorAll('.mobile-topbar .dropdown').forEach(function (dropdown) {
+      var trigger = dropdown.querySelector(':scope > [aria-haspopup="true"]');
+      if (trigger && !dropdown.contains(e.target)) trigger.setAttribute('aria-expanded', 'false');
+    });
+  });
+  document.addEventListener('keydown', function (e) {
+    if (e.key !== 'Escape') return;
+    document.querySelectorAll('.mobile-topbar .dropdown > [aria-haspopup="true"]').forEach(function (trigger) {
+      trigger.setAttribute('aria-expanded', 'false');
+    });
   });
 
   if ($('add-meal-select')) $('add-meal-select').addEventListener('change', renderAvailability);
@@ -323,7 +442,7 @@
   window.addEventListener('pageshow', function (e) {
     if (!e.persisted) return;
     resetForms(document);
-    openModals().forEach(function (m) { closeModal(m, false); });
+    closeAll();
   });
 
   /* ------------------------------------------------------------------ small-screen scroll to today */
