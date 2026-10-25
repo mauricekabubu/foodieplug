@@ -779,12 +779,14 @@
               <p>Your favorite meals, saved recipes, and everyday food inspiration — all in one place.</p>
             </div>
 
-            <div class="ml-header-actions">
+            <div class="ml-header-actions ml-library-actions">
               <a class="ml-btn ml-btn-primary" href="{% url 'meals:create_meal' %}">+ Add Meal</a>
-              <a class="ml-btn ml-btn-secondary" href="{% url 'meals:timetable' %}">Meal Planner</a>
-              <a class="ml-btn ml-btn-secondary" href="{% url 'meals:favorite_meals' %}">Favorites{% if favorites_count %} ({{ favorites_count }}){% endif %}</a>
-              <a class="ml-btn ml-btn-secondary" href="{% url 'meals:archived_meals' %}">Archive{% if archived_count %} ({{ archived_count }}){% endif %}</a>
-              <a class="ml-btn ml-btn-secondary" href="{% url 'ai:page' %}">Ask FoodiePlug</a>
+              <nav class="ml-nav-pills" aria-label="Meal library shortcuts">
+                <a class="ml-btn ml-btn-secondary" href="{% url 'meals:timetable' %}">Meal Planner</a>
+                <a class="ml-btn ml-btn-secondary" href="{% url 'meals:favorite_meals' %}">Favorites{% if favorites_count %} ({{ favorites_count }}){% endif %}</a>
+                <a class="ml-btn ml-btn-secondary" href="{% url 'meals:archived_meals' %}">Archive{% if archived_count %} ({{ archived_count }}){% endif %}</a>
+                <a class="ml-btn ml-btn-secondary" href="{% url 'ai:page' %}">Ask FoodiePlug</a>
+              </nav>
             </div>
           </header>
 
@@ -796,17 +798,15 @@
             {% if view != "favorite_meals" and not favorites_page %}
               <form method="get" action="{% url 'meals:meal_library' %}" class="ml-search" role="search">
                 <input type="hidden" name="sort" value="{{ sort|default:'default' }}">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
-                     stroke="currentColor" stroke-width="2" stroke-linecap="round"
-                     stroke-linejoin="round" aria-hidden="true">
-                  <circle cx="11" cy="11" r="7"/>
-                  <path d="m20 20-3.5-3.5"/>
-                </svg>
-
                 <label for="ml-q" class="ml-sr">Search meals</label>
-                <input type="search" id="ml-q" name="q" value="{{ query }}"
-                       placeholder="Search meals, ingredients, or recipes…" autocomplete="off">
-                <button type="submit" class="ml-btn ml-btn-secondary ml-btn-sm">Search</button>
+                <div class="ml-search-field">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/>
+                  </svg>
+                  <input type="search" id="ml-q" name="q" value="{{ query }}"
+                         placeholder="Search meals..." autocomplete="off">
+                  <button type="submit" class="ml-search-submit">Search</button>
+                </div>
 
                 {% if query %}
                   <a class="ml-btn ml-btn-quiet ml-btn-sm" href="{% url 'meals:meal_library' %}">Clear</a>
