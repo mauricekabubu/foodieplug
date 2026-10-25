@@ -6,6 +6,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.db.models import Count, Q, Sum
 from django.shortcuts import redirect, render
+from django.utils import timezone
 from services.pagination import paginate_queryset
 
 from services.budget import (
@@ -45,8 +46,8 @@ def _plain(value):
 
 def _parse_amount(raw):
     try:
-        value = Decimal((raw or "").strip())
-    except InvalidOperation:
+        value = Decimal(str(raw or "").strip())
+    except (InvalidOperation, TypeError, ValueError):
         raise ValueError("Enter a valid amount.")
 
     if not value.is_finite():
@@ -54,7 +55,17 @@ def _parse_amount(raw):
     if value <= 0:
         raise ValueError("The amount must be greater than zero.")
 
-    return value.quantize(Decimal("0.01"))
+    if value > Decimal("99999999.99"):
+        raise ValueError("The amount must be less than KES 100,000,000.")
+
+    try:
+        currency_value = value.quantize(Decimal("0.01"))
+    except InvalidOperation:
+        raise ValueError("Enter a valid amount.")
+    if currency_value != value:
+        raise ValueError("Enter an amount with no more than two decimal places.")
+
+    return currency_value
 
 
 def _parse_date(raw, label):
@@ -94,7 +105,13 @@ def _expense_values(expense=None, post=None):
         return {"description": expense.description, "amount": _plain(expense.amount),
                 "date": expense.date.isoformat()}
 
-    return {"description": "", "amount": "", "date": date.today().isoformat()}
+    return {"description": "", "amount": "", "date": timezone.localdate().isoformat()}
+
+
+def _default_expense_date(budget):
+    """Use the user's local today when possible, bounded by the budget period."""
+    today = timezone.localdate()
+    return min(max(today, budget.start_date), budget.end_date).isoformat()
 
 
 def _budget_metrics(budget):
@@ -230,6 +247,7 @@ def budget_dashboard(request):
         "budgets_page_query": budgets_pagination["page_query"],
         "budget": active_budget,
         "current_budget": active_budget,
+        "expense_default_date": _default_expense_date(active_budget) if active_budget else "",
         "expenses": [],
     }
 
@@ -303,6 +321,7 @@ def budget_detail(request, budget_id):
 
     context = {
         "budget": budget,
+        "expense_default_date": _default_expense_date(budget),
         "expenses": expenses_pagination["page_obj"].object_list,
         "page_obj": expenses_pagination["page_obj"],
         "page_links": expenses_pagination["page_links"],
@@ -336,6 +355,8 @@ def add_expense_view(request, budget_id):
             description = values["description"].strip()
             if not description:
                 raise ValueError("Enter what the expense was for.")
+            if len(description) > 200:
+                raise ValueError("The description must be 200 characters or fewer.")
 
             amount = _parse_amount(values["amount"])
             expense_date = _parse_date(values["date"], "date")
