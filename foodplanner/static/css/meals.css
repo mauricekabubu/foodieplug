@@ -286,6 +286,9 @@
   .ml-search {
     max-width: none;
     width: 100%;
+    /* The desktop 360px flex basis becomes a vertical size when the toolbar
+       stacks on mobile; reset it so it cannot create a tall blank search row. */
+    flex: 0 0 auto;
   }
   .ml-search-field { width: 100%; }
   .ml-search-field input { width: 100%; }
