@@ -35,42 +35,6 @@
   var current = null;     // data of the meal cell whose options are open
   var origin = null;      // element to return focus to when everything closes
   var pressOnBackdrop = false;
-  var pageScrollLock = null;
-
-  function lockPageScroll() {
-    if (window.innerWidth > 640 || pageScrollLock) return;
-
-    var body = document.body;
-    var properties = ['position', 'top', 'left', 'right', 'width', 'overflow'];
-    var styles = {};
-    properties.forEach(function (name) {
-      styles[name] = {
-        value: body.style.getPropertyValue(name),
-        priority: body.style.getPropertyPriority(name)
-      };
-    });
-    pageScrollLock = { scrollY: window.scrollY || window.pageYOffset, styles: styles };
-
-    body.style.setProperty('position', 'fixed');
-    body.style.setProperty('top', (-pageScrollLock.scrollY) + 'px');
-    body.style.setProperty('left', '0');
-    body.style.setProperty('right', '0');
-    body.style.setProperty('width', '100%');
-    body.style.setProperty('overflow', 'hidden');
-  }
-
-  function unlockPageScroll() {
-    if (!pageScrollLock) return;
-
-    var state = pageScrollLock;
-    pageScrollLock = null;
-    Object.keys(state.styles).forEach(function (name) {
-      var saved = state.styles[name];
-      if (saved.value) document.body.style.setProperty(name, saved.value, saved.priority);
-      else document.body.style.removeProperty(name);
-    });
-    window.scrollTo(0, state.scrollY);
-  }
 
   function syncModalViewport() {
     var viewport = window.visualViewport;
@@ -120,7 +84,7 @@
     modal.classList.add(OPEN);
     modal.setAttribute('aria-hidden', 'false');
     document.body.classList.add(LOCK);
-    lockPageScroll();
+    if (window.innerWidth <= 640) document.documentElement.classList.add(LOCK);
     syncModalViewport();
     window.requestAnimationFrame(function () { focusFirst(modal); });
   }
@@ -132,7 +96,7 @@
 
     if (!openModals().length) {
       document.body.classList.remove(LOCK);
-      unlockPageScroll();
+      document.documentElement.classList.remove(LOCK);
       if (restoreFocus !== false && origin && document.body.contains(origin)) {
         try { origin.focus({ preventScroll: true }); } catch (e) { origin.focus(); }
       }
