@@ -9,17 +9,17 @@ import logging
 from datetime import date, timedelta
 from decimal import Decimal, InvalidOperation
 
-from django.contrib import messages
-from django.contrib.auth.decorators import login_required
-from django.db import IntegrityError, OperationalError, transaction
-from django.db.models import Case, ExpressionWrapper, IntegerField, Value, When
-from django.db.models.functions import Coalesce
-from django.shortcuts import redirect, render
-from django.urls import reverse
+from django.contrib import messages  # type: ignore[import-not-found]
+from django.contrib.auth.decorators import login_required  # type: ignore[import-not-found]
+from django.db import IntegrityError, OperationalError, transaction  # type: ignore[import-not-found]
+from django.db.models import Case, ExpressionWrapper, IntegerField, Value, When  # type: ignore[import-not-found]
+from django.db.models.functions import Coalesce  # type: ignore[import-not-found]
+from django.shortcuts import redirect, render  # type: ignore[import-not-found]
+from django.urls import reverse  # type: ignore[import-not-found]
 from services.pagination import paginate_queryset
-from django.utils import timezone
-from django.views.decorators.http import require_POST
-from django.utils.http import url_has_allowed_host_and_scheme
+from django.utils import timezone  # type: ignore[import-not-found]
+from django.views.decorators.http import require_POST  # type: ignore[import-not-found]
+from django.utils.http import url_has_allowed_host_and_scheme  # type: ignore[import-not-found]
 
 from services.meals import (
     get_meal_by_id,
