@@ -86,7 +86,8 @@
 /* ---------------------------------------------------------------- 2. base */
 
 * { box-sizing: border-box; }
-html, body { margin: 0; height: 100%; }
+html, body { margin: 0; min-height: 100%; }
+html, body { overflow-x: clip; }
 
 body {
   font-family: var(--font-ui);
@@ -644,11 +645,12 @@ body.modal-open { overflow: hidden; overscroll-behavior: none; }
   .mp-panel,
   .mp-panel.is-small {
     width: 100%; max-width: none; margin: 0; border-radius: 16px 16px 0 0;
-    max-height: 90vh;
-    max-height: min(90dvh, calc(100dvh - env(safe-area-inset-top, 0px)));
+    max-height: calc(100vh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
+    max-height: calc(100dvh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
     padding: 1rem 1rem calc(1rem + env(safe-area-inset-bottom, 0px));
   }
   .mp-modal .mp-panel { align-self: end; justify-self: stretch; }
+  .mp-modal.is-open .mp-panel { animation: mp-fade 0.15s ease; }
   .tt-cell { min-height: 104px; padding: 0.3rem; }
   .tt-meal { min-height: 98px; padding: 0.4rem; }
   .tt-meal-foot { justify-content: flex-start; }
