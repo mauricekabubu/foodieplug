@@ -13,7 +13,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Fraunces:opsz,wght@9..144,560&display=swap" rel="stylesheet">
 <link rel="stylesheet" type="text/css" href="{% static 'css/food_library.css' %}">
-<link rel="stylesheet" type="text/css" href="{% static 'css/meal.css' %}">
+<link rel="stylesheet" type="text/css" href="{% static 'css/meal.css' %}?v=mobile-sheet-3">
 <link rel="stylesheet" type="text/css" href="{% static 'css/toasts.css' %}">
 <script>
   (function () {
@@ -486,7 +486,7 @@
 {{ meal_options|json_script:"meal-options" }}
 
 <script src="{% static 'js/dashboard.js' %}"></script>
-<script src="{% static 'js/meal.js' %}"></script>
+<script src="{% static 'js/meal.js' %}?v=mobile-sheet-3"></script>
 <script src="{% static 'js/toasts.js' %}"></script>
 
 </body>
