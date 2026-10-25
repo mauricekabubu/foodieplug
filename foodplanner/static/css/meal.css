@@ -492,20 +492,20 @@ body.modal-open { overflow: hidden; overscroll-behavior: none; }
 .mp-modal {
   display: none;
   position: fixed; inset: 0; z-index: 1000;
-  align-items: center; justify-content: center;
+  place-items: center;
   padding: 1rem;
   background: rgba(20, 20, 18, 0.5);
   overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch;
-  -webkit-backdrop-filter: blur(3px); backdrop-filter: blur(3px);
+  isolation: isolate;
 }
-.mp-modal.is-open { display: flex; animation: mp-fade 0.15s ease; }
+.mp-modal.is-open { display: grid; animation: mp-fade 0.15s ease; }
 
 .mp-panel {
   width: 100%; max-width: 520px;
   max-height: calc(100vh - 2rem);
   max-height: calc(100dvh - 2rem);
   overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch;
-  min-height: 0; margin: auto;
+  min-height: 0; margin: 0; align-self: center; justify-self: center;
   padding: 1.2rem 1.35rem 1.35rem;
   background: var(--surface);
   color: var(--ink);
@@ -514,8 +514,8 @@ body.modal-open { overflow: hidden; overscroll-behavior: none; }
   box-shadow: 0 18px 48px rgba(0, 0, 0, 0.22);
 }
 .mp-modal .mp-panel {
-  position: relative; z-index: 1; opacity: 1; pointer-events: auto;
-  background-color: var(--mp-surface, var(--surface, #fff));
+  position: relative; z-index: 1; margin: 0; opacity: 1; pointer-events: auto;
+  background: var(--mp-surface, var(--surface, #fff));
 }
 .mp-modal.is-open .mp-panel { animation: mp-pop 0.18s ease; }
 .mp-panel.is-small { max-width: 420px; }
@@ -637,7 +637,7 @@ body.modal-open { overflow: hidden; overscroll-behavior: none; }
   .mp-field-row { grid-template-columns: minmax(0, 1fr); gap: 0; }
 
   .mp-modal {
-    align-items: flex-end;
+    place-items: end center;
     padding: env(safe-area-inset-top, 0px) env(safe-area-inset-right, 0px)
              env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px);
   }
@@ -648,6 +648,7 @@ body.modal-open { overflow: hidden; overscroll-behavior: none; }
     max-height: min(90dvh, calc(100dvh - env(safe-area-inset-top, 0px)));
     padding: 1rem 1rem calc(1rem + env(safe-area-inset-bottom, 0px));
   }
+  .mp-modal .mp-panel { align-self: end; justify-self: stretch; }
   .tt-cell { min-height: 104px; padding: 0.3rem; }
   .tt-meal { min-height: 98px; padding: 0.4rem; }
   .tt-meal-foot { justify-content: flex-start; }
