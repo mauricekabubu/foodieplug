@@ -232,6 +232,10 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
   height: 100dvh;
   position: sticky;
   top: 0;
+  align-self: start;
+  min-height: 100vh;
+  min-height: 100dvh;
+  min-width: 0;
   padding: 1.4rem 0 1rem;
 }
 
@@ -239,10 +243,11 @@ a:focus-visible, button:focus-visible, input:focus-visible, textarea:focus-visib
   display: flex; align-items: center; gap: 0.55rem;
   padding: 0 1.4rem 1.4rem;
 }
+.sidebar-brand #drawer-close { display: none; }
 .sidebar-brand svg { width: 30px; height: 30px; }
 .sidebar-brand span { font-weight: 700; font-size: 1.05rem; }
 
-.sidebar-nav { flex: 1; overflow-y: auto; padding: 0 0.8rem; }
+.sidebar-nav { flex: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain; padding: 0 0.8rem; }
 .nav-label {
   font-size: 0.72rem; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase;
   color: var(--muted); padding: 1rem 0.6rem 0.4rem;
@@ -380,6 +385,82 @@ body.drawer-open .sidebar { transform: translateX(0); }
 /* ---------------------------------------------------------------- main content */
 
 .main-content { min-width: 0; padding: 1.6rem clamp(1.1rem, 3vw, 2.2rem) 3rem; }
+
+/* App pages share the shell stylesheet but retain their own page components. */
+.app-shell,
+.main-content,
+.main-content > *,
+.page-header > * { min-width: 0; }
+
+.main-content img,
+.main-content svg,
+.main-content canvas,
+.main-content video { max-width: 100%; }
+
+/* Keep dialogs within the usable viewport and let their content scroll. */
+.modal-overlay,
+.mp-modal,
+.ai-modal,
+.bd-modal {
+  box-sizing: border-box;
+  padding: max(1rem, env(safe-area-inset-top, 0px)) max(1rem, env(safe-area-inset-right, 0px)) max(1rem, env(safe-area-inset-bottom, 0px)) max(1rem, env(safe-area-inset-left, 0px));
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.modal-panel,
+.mp-modal .mp-panel,
+.ai-modal .ai-panel,
+.bd-modal .bd-sheet {
+  box-sizing: border-box;
+  width: min(100%, 38rem);
+  max-height: calc(100vh - 2rem);
+  max-height: calc(100dvh - 2rem - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+dialog[open] {
+  box-sizing: border-box;
+  max-width: calc(100vw - 2rem);
+  max-height: calc(100vh - 2rem);
+  max-height: calc(100dvh - 2rem - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
+  overflow: auto;
+  overscroll-behavior: contain;
+}
+
+@media (max-width: 980px) {
+  .sidebar { min-height: 0; }
+}
+
+@media (max-width: 640px) {
+  .main-content { padding-top: 1rem; padding-bottom: max(2rem, env(safe-area-inset-bottom, 0px)); }
+  .modal-overlay,
+  .mp-modal,
+  .ai-modal,
+  .bd-modal { padding: 0; }
+  .modal-panel,
+  .mp-modal .mp-panel,
+  .ai-modal .ai-panel,
+  .bd-modal .bd-sheet {
+    width: 100%;
+    max-width: none;
+    max-height: calc(100vh - env(safe-area-inset-top, 0px));
+    max-height: calc(100dvh - env(safe-area-inset-top, 0px));
+    border-radius: 18px 18px 0 0;
+    margin-top: auto;
+    padding-bottom: max(1rem, env(safe-area-inset-bottom, 0px));
+  }
+  .mp-modal .mp-panel,
+  .ai-modal .ai-panel { border-radius: 18px 18px 0 0; }
+  dialog[open] { max-width: calc(100vw - 1rem); }
+}
+
+@media (max-width: 360px) {
+  .mobile-topbar { gap: 0.35rem; padding-left: 0.65rem; padding-right: 0.65rem; }
+  .mobile-topbar-actions { gap: 0.1rem; }
+  .main-content { padding-left: 0.7rem; padding-right: 0.7rem; }
+}
 
 .page-header {
   display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem;
@@ -654,7 +735,8 @@ body.drawer-open .sidebar { transform: translateX(0); }
 @media (max-width: 980px) {
   .app-shell { grid-template-columns: 1fr; }
   .mobile-topbar { display: flex; }
-  .page-header-actions { display: none; }
+  .page-header { flex-wrap: wrap; }
+  .page-header-actions { display: flex; flex-wrap: wrap; }
 
   .sidebar {
     position: fixed; z-index: 50; top: 0; left: 0; bottom: 0; width: min(82vw, 320px);
@@ -662,6 +744,7 @@ body.drawer-open .sidebar { transform: translateX(0); }
     transition: transform 0.2s ease;
     padding-top: calc(1.4rem + env(safe-area-inset-top, 0px));
   }
+  .sidebar-brand #drawer-close { display: flex; }
 
   .main-content {
     padding-left: clamp(0.9rem, 3vw, 1.4rem);
