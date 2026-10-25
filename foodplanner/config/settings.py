@@ -59,11 +59,12 @@ def _env_bool(name, default=False):
     return value.strip().lower() in {"1", "true", "yes", "on"}
 
 
+
 SECRET_KEY = os.getenv(
     "SECRET_KEY",
     "django-insecure-local-development-only",
 )
-DEBUG = _env_bool("DEBUG", False)
+DEBUG = _env_bool("DEBUG", True)
 import os
 
 ALLOWED_HOSTS = [
@@ -73,19 +74,24 @@ ALLOWED_HOSTS = [
     "127.0.0.1",
 ]
 
+
 extra_hosts = os.environ.get("DJANGO_ALLOWED_HOSTS", "")
 
 ALLOWED_HOSTS.extend(
     host.strip()
     for host in extra_hosts.split(",")
     if host.strip()
-)
+) 
+
+
 
 CSRF_TRUSTED_ORIGINS = [
     origin.strip()
     for origin in os.getenv("CSRF_TRUSTED_ORIGINS", "").split(",")
     if origin.strip()
 ]
+
+
 
 SITE_ID = 1
 SITE_DOMAIN = os.getenv("SITE_DOMAIN", "localhost:8000")
