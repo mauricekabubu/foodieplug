@@ -92,7 +92,7 @@ def _budget_values(budget=None, post=None):
             "end_date": budget.end_date.isoformat(),
         }
 
-    today = date.today()
+    today = timezone.localdate()
     return {"name": "", "amount": "", "start_date": today.isoformat(),
             "end_date": _last_day_of_month(today).isoformat()}
 
@@ -121,7 +121,7 @@ def _budget_metrics(budget):
     Only figures that can be calculated from recorded expenses are produced. Planned spending,
     shopping impact, categories and price comparisons need other modules and are NOT invented here.
     """
-    today = date.today()
+    today = timezone.localdate()
     expenses = get_budget_expenses(budget)
     totals = expenses.aggregate(total=Sum("amount"), count=Count("id"))
     spent = Decimal(totals["total"] or 0)
@@ -232,7 +232,7 @@ def _filter_budget_expenses(expenses, query):
 @login_required
 def budget_dashboard(request):
     """Display the user's budgets and the current budget summary."""
-    active_budget = get_current_budget(request.user, date.today())
+    active_budget = get_current_budget(request.user)
     expense_query = request.GET.get("expense_q", "").strip()[:100]
     budgets = get_user_budgets(request.user).order_by("-start_date", "-pk")
     budgets_pagination = paginate_queryset(
@@ -380,7 +380,7 @@ def add_expense_view(request, budget_id):
 @login_required
 def current_budget(request):
     """Redirect to the user's currently active budget."""
-    budget = get_current_budget(request.user, date.today())
+    budget = get_current_budget(request.user)
 
     if not budget:
         messages.info(request, "You don't have an active budget yet. Create one to start tracking expenses.")
