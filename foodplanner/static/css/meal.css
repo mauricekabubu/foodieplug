@@ -639,14 +639,18 @@ body.modal-open { overflow: hidden; overscroll-behavior: none; }
 
   .mp-modal {
     place-items: end center;
+    top: var(--mp-viewport-offset-top, 0px);
+    bottom: auto;
+    height: var(--mp-viewport-height, 100dvh);
     padding: env(safe-area-inset-top, 0px) env(safe-area-inset-right, 0px)
              env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px);
+    overflow: hidden;
   }
   .mp-panel,
   .mp-panel.is-small {
     width: 100%; max-width: none; margin: 0; border-radius: 16px 16px 0 0;
-    max-height: calc(100vh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
-    max-height: calc(100dvh - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
+    max-height: calc(var(--mp-viewport-height, 100vh) - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
+    max-height: calc(var(--mp-viewport-height, 100dvh) - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
     padding: 1rem 1rem calc(1rem + env(safe-area-inset-bottom, 0px));
   }
   .mp-modal .mp-panel { align-self: end; justify-self: stretch; }
