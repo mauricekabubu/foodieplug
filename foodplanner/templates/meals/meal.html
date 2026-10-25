@@ -332,9 +332,9 @@
 
 <!-- ============ ADD MEAL MODAL ============ -->
 <div class="mp-modal" id="add-meal-modal" aria-hidden="true">
-  <div class="mp-panel" role="dialog" aria-modal="true" aria-labelledby="add-meal-title">
+  <div class="mp-panel" role="dialog" aria-modal="true" aria-labelledby="add-meal-title" aria-describedby="add-meal-description">
     <div class="mp-panel-head">
-      <div><h2 id="add-meal-title">Add meal</h2><p>Choose a meal and where it goes in your week.</p></div>
+      <div><h2 id="add-meal-title">Add meal</h2><p id="add-meal-description">Choose a meal and where it goes in your week.</p></div>
       <button type="button" class="icon-btn" data-close-modal aria-label="Close"><svg viewBox="0 0 24 24" width="20" height="20" fill="none"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></button>
     </div>
     <form method="post" action="{% url 'meals:schedule_meal' %}" id="add-meal-form">
@@ -377,7 +377,7 @@
 
 <!-- ============ MEAL OPTIONS MODAL (edit / move / duplicate / remove) ============ -->
 <div class="mp-modal" id="meal-modal" aria-hidden="true">
-  <div class="mp-panel" role="dialog" aria-modal="true" aria-labelledby="meal-modal-title">
+  <div class="mp-panel" role="dialog" aria-modal="true" aria-labelledby="meal-modal-title" aria-describedby="meal-modal-slot">
     <div class="mp-panel-head">
       <div><h2 id="meal-modal-title">Meal</h2><p id="meal-modal-slot"></p></div>
       <button type="button" class="icon-btn" data-close-modal aria-label="Close"><svg viewBox="0 0 24 24" width="20" height="20" fill="none"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></button>
@@ -468,7 +468,7 @@
 
 <!-- ============ REMOVE CONFIRMATION MODAL ============ -->
 <div class="mp-modal" id="remove-meal-modal" aria-hidden="true">
-  <div class="mp-panel is-small" role="dialog" aria-modal="true" aria-labelledby="remove-meal-title">
+  <div class="mp-panel is-small" role="dialog" aria-modal="true" aria-labelledby="remove-meal-title" aria-describedby="remove-meal-text">
     <div class="mp-panel-head">
       <div><h2 id="remove-meal-title">Remove this meal?</h2><p id="remove-meal-text">It will be taken off your plan.</p></div>
       <button type="button" class="icon-btn" data-close-modal aria-label="Close"><svg viewBox="0 0 24 24" width="20" height="20" fill="none"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></button>
